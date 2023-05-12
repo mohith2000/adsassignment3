@@ -28,16 +28,19 @@ def findxandy(df):
     col_names = df.columns
     col_list = list(col_names)
 
-    x_data = np.array(col_list[4:-1])
+    years = np.array(col_list[4:-1])
 
     df.drop(['Country Name', 'Country Code', 'Indicator Code', 'Unnamed: 67'],
             axis=1, inplace=True)
     transposed_df = df_filtered.transpose()
     transposed_df.columns = transposed_df.iloc[0]
     transposed_df = transposed_df.drop('Indicator Name')
+    x_data = np.array(
+        transposed_df['Agricultural land (sq. km)'])
     y_data = np.array(
         transposed_df['Urban population (% of total population)'])
-    return x_data, y_data, transposed_df
+    
+    return x_data, y_data, transposed_df, years
 
 
 # Load data for Aruba and Afghanistan
@@ -47,19 +50,9 @@ df = pd.read_csv('API_19_DS2_en_csv_v2_5455435.csv', skiprows=4)
 country = 'Germany'
 df_filtered = filter(df, country)
 
-x_data, y_data, trans_df = findxandy(df_filtered)
+x_data, y_data, trans_df, year = findxandy(df_filtered)
 
-# get data for urban population as a percentage of total population
-col_names = df_filtered.columns
-col_list = list(col_names)
 
-x_data = np.array(col_list[4:-1])
-
-df_filtered.drop(['Country Name', 'Country Code','Indicator Code', 'Unnamed: 67'], axis=1, inplace=True)
-transposed_df = df_filtered.transpose()
-transposed_df.columns = transposed_df.iloc[0]
-transposed_df =transposed_df.drop('Indicator Name')
-y_data = np.array(transposed_df['Urban population (% of total population)'])
 
 # df = df.loc[:, ['Country Name', 'Country Code', 'Indicator Name', '1960', '1970', '1980', '1990', '2000', '2010', '2020']]
 # df = df[df['Indicator Name'] == 'Urban population (% of total population)']
@@ -67,7 +60,52 @@ y_data = np.array(transposed_df['Urban population (% of total population)'])
 # df.columns.name = None
 # df = df.rename(columns={'index': 'Year'})
 # Normalize data
-df_norm = (df.iloc[:, 1:] - df.iloc[:, 1:].mean()) / df.iloc[:, 1:].std()
+trans_df_norm = (trans_df.iloc[:, 1:] - trans_df.iloc[:, 1:].mean()) / trans_df.iloc[:, 1:].std()
+
+#######################################################################################
+
+
+# Get the list of all countries in the data
+countriesdata = transposeddata['Country Name'].unique()
+
+# Initialize an empty array to store the concatenated data
+concat_data1 = np.empty([0, 2])
+
+# Loop over the countries and concatenate the data for the two indicators and the years of interest
+for year in years:
+    data1 = transposeddata.loc[(transposeddata['Country Name'] == country) & (transposeddata['Indicator Name'] == indicator1name), datayears2].values[0]
+    data2 = transposeddata.loc[(transposeddata['Country Name'] == country) & (transposeddata['Indicator Name'] == indicator2name), datayears2].values[0]
+    data_country1 = np.column_stack((data1, data2))
+    concat_data1 = np.vstack([concat_data1, data_country1])
+
+# Perform KMeans clustering with k=4
+kmeanscluster = KMeans(n_clusters= 4, random_state=0).fit(concat_data1)
+
+# Get the cluster labels
+labels = kmeanscluster.labels_
+
+# Set the plot title and axis labels
+plt.title('Total Population vs. Urban Population for all Countries (2000)')
+plt.xlabel('Population, total')
+plt.ylabel('Urban population')
+
+# Create a scatter plot for each cluster with a different color and label
+for i in range(kmeanscluster.n_clusters):
+    plt.scatter(concat_data1[labels == i, 0], concat_data1[labels == i, 1], label='Cluster {}'.format(i+1))
+
+# Add a legend to the plot with the cluster labels
+plt.legend()
+plt.savefig('scatterplotads.png', dpi=300)
+# Display the plot
+plt.show()
+
+
+
+#######################################################################################
+
+
+
+
 
 # Perform KMeans clustering
 kmeans = KMeans(n_clusters=2)
