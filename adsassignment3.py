@@ -127,29 +127,33 @@ y = trans_df['Urban population (% of total population)']
 # y_norm = (y_data - np.min(y_data)) / (np.max(y_data) - np.min(y_data))
 
 # fit the logistic function to the normalized data
-popt, pcov = opt.curve_fit(line, x_norm, y_norm)
+popt, pcov = opt.curve_fit(line, x, y)
+sigma = np.sqrt(np.diag(pcov))
+z = line(x, *popt)
 
-# create a range of x values for the predicted data
-x_predict = np.linspace(0, 1, num=100)
+# # create a range of x values for the predicted data
+# x_predict = np.linspace(0, 1, num=100)
 
-# predict y values for the logistic function using the fitted parameters
-y_predict = logistic(x_predict, *popt)
+# # predict y values for the logistic function using the fitted parameters
+# y_predict = logistic(x_predict, *popt)
 
-# unnormalize the predicted data
-y_predict = y_predict * (np.max(y_data) - np.min(y_data)) + np.min(y_data)
+# # unnormalize the predicted data
+# y_predict = y_predict * (np.max(y_data) - np.min(y_data)) + np.min(y_data)
 
-# calculate the lower and upper bounds of the confidence interval
-err_lower, err_upper = err_ranges(x_norm, y_norm, logistic, popt, pcov, alpha=0.05)
+# # calculate the lower and upper bounds of the confidence interval
+# err_lower, err_upper = err_ranges(x_norm, y_norm, logistic, popt, pcov, alpha=0.05)
 
-# unnormalize the error bounds
-err_lower = err_lower * (np.max(y_data) - np.min(y_data)) + np.min(y_data)
-err_upper = err_upper * (np.max(y_data) - np.min(y_data)) + np.min(y_data)
+# # unnormalize the error bounds
+# err_lower = err_lower * (np.max(y_data) - np.min(y_data)) + np.min(y_data)
+# err_upper = err_upper * (np.max(y_data) - np.min(y_data)) + np.min(y_data)
 
 # plot the data and the best fitting logistic function with error bounds
-fig, ax = plt.subplots(figsize=(8, 6))
-ax.scatter(x_data, y_data)
-ax.plot(x_predict * (np.max(x_data) - np.min(x_data)) + np.min(x_data), y_predict, color='red')
-ax.fill_between(x_predict * (np.max(x_data) - np.min(x_data)) + np.min(x_data), err_lower, err_upper, alpha=0.2, color='gray')
+# fig, ax = plt.subplots(figsize=(8, 6))
+# ax.scatter(x_data, y_data)
+# ax.plot(x_predict * (np.max(x_data) - np.min(x_data)) + np.min(x_data), y_predict, color='red')
+# ax.fill_between(x_predict * (np.max(x_data) - np.min(x_data)) + np.min(x_data), err_lower, err_upper, alpha=0.2, color='gray')
+plt.plot(x, y, "d", markersize=4)
+plt.plot(x,z)
 ax.set_xlabel('Year')
 ax.set_ylabel('Urban population (% of total population)')
 ax.set_title('Logistic Fit to Urban Population Data for Aruba and Afghanistan')
